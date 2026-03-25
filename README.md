@@ -35,3 +35,8 @@
 |-------|------|
 | `clean-code-javascript` | JavaScript  clean code 规则，用于代码重构与质量提升 |
 | `code-review` | 代码审查技能，提交前检查潜在 bug |
+
+
+## 参考链接
+
+- 超越上下文，让 Agent Skills 完成你的真正需求（3）Anthropic 官方教你更好的构建Skill https://zhuanlan.zhihu.com/p/2012102105616377451
