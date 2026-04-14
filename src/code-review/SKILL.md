@@ -1,109 +1,140 @@
 ---
-name: codereview
-description: 代码审查技能 - 在代码提交前检查潜在bug和问题
+name: code-review
+description: Use when receiving code review feedback (especially if unclear or technically questionable), when completing tasks or major features requiring review before proceeding, or before making any completion/success claims. Covers three practices - receiving feedback with technical rigor over performative agreement, requesting reviews via code-reviewer subagent, and verification gates requiring evidence before any status claims. Essential for subagent-driven development, pull requests, and preventing false completion claims.
 ---
 
-# 代码审查技能
+# Code Review
 
-## 使用场景
-当代码编写完成准备提交时，使用此技能进行全面的代码审查，确保代码质量和稳定性。
+Guide proper code review practices emphasizing technical rigor, evidence-based claims, and verification over performative responses.
 
-## 执行流程
+## Overview
 
-1. **分析代码变更**
-   - 识别所有修改的文件和代码行
-   - 理解代码变更的上下文和目的
-   - 分析变更对现有功能的影响
+Code review requires three distinct practices:
 
-2. **系统性审查**
-   - 按照下方审查清单逐项检查
-   - 重点关注潜在bug、逻辑错误和性能问题
-   - 检查代码规范和最佳实践
+1. **Receiving feedback** - Technical evaluation over performative agreement
+2. **Requesting reviews** - Systematic review via code-reviewer subagent
+3. **Verification gates** - Evidence before any completion claims
 
-3. **输出审查报告**
-   - 明确指出发现的问题
-   - 提供修复建议
-   - 评估代码质量和风险等级
+Each practice has specific triggers and protocols detailed in reference files.
 
-## 审查清单
+## Core Principle
 
-### 1. 功能实现审查
-- ✅ 这些改动实现了什么功能？
-- ✅ 功能实现是否完整？
-- ✅ 是否满足需求要求？
-- ✅ 边界条件是否处理？
+**Technical correctness over social comfort.** Verify before implementing. Ask before assuming. Evidence before claims.
 
-### 2. Bug和问题检查
-- ✅ 是否存在潜在的bug或问题？
-- ✅ 空值/空数组处理是否完善？
-- ✅ 数组越界、空指针等异常情况是否处理？
-- ✅ 数据库查询是否存在SQL注入风险？
-- ✅ 变量未初始化、类型不匹配等问题？
-- ✅ 并发场景下是否存在竞态条件？
+## When to Use This Skill
 
-### 3. 代码逻辑审查
-- ✅ 代码逻辑是否合理？
-- ✅ 业务逻辑是否正确？
-- ✅ 条件判断是否完整（if-else覆盖所有情况）？
-- ✅ 循环是否有正确的退出条件？
-- ✅ 异常处理是否完善？
+### Receiving Feedback
+Trigger when:
+- Receiving code review comments from any source
+- Feedback seems unclear or technically questionable
+- Multiple review items need prioritization
+- External reviewer lacks full context
+- Suggestion conflicts with existing decisions
 
-### 4. 代码质量审查
-- ✅ 代码是否符合项目规范？
-- ✅ 函数是否过于复杂（圈复杂度）？
-- ✅ 是否有重复代码？
-- ✅ 变量命名是否清晰易懂？
-- ✅ 注释是否充分？
+**Reference:** `references/code-review-reception.md`
 
-### 5. 性能和安全审查
-- ✅ 是否存在性能问题（N+1查询、死循环等）？
-- ✅ 是否有安全漏洞（XSS、CSRF、权限校验等）？
-- ✅ 敏感信息是否泄露（密码、密钥等）？
+### Requesting Review
+Trigger when:
+- Completing tasks in subagent-driven development (after EACH task)
+- Finishing major features or refactors
+- Before merging to main branch
+- Stuck and need fresh perspective
+- After fixing complex bugs
 
-### 6. 数据库操作审查
-- ✅ 数据库字段名大小写是否正确（查询时区分大小写，结果访问用小写）？
-- ✅ 事务处理是否正确？
-- ✅ 数据库连接是否正确关闭？
+**Reference:** `references/requesting-code-review.md`
 
-### 7. 兼容性审查
-- ✅ 是否影响现有功能？
-- ✅ 向后兼容性是否保持？
-- ✅ 是否需要数据迁移？
+### Verification Gates
+Trigger when:
+- About to claim tests pass, build succeeds, or work is complete
+- Before committing, pushing, or creating PRs
+- Moving to next task
+- Any statement suggesting success/completion
+- Expressing satisfaction with work
 
-## 审查报告格式
+**Reference:** `references/verification-before-completion.md`
 
-审查完成后，按以下格式输出：
+## Quick Decision Tree
 
-```markdown
-## 代码审查报告
-
-### 功能实现
-[说明改动实现了什么功能]
-
-### 发现的问题
-
-#### 🔴 严重问题
-- [问题描述] - [修复建议]
-
-#### 🟡 警告
-- [问题描述] - [修复建议]
-
-#### 🟢 建议优化
-- [优化建议]
-
-### 代码质量评估
-- 逻辑合理性：✅/⚠️/❌
-- Bug风险：✅/⚠️/❌
-- 代码规范：✅/⚠️/❌
-
-### 总结
-[总体评价和建议]
+```
+SITUATION?
+│
+├─ Received feedback
+│  ├─ Unclear items? → STOP, ask for clarification first
+│  ├─ From human partner? → Understand, then implement
+│  └─ From external reviewer? → Verify technically before implementing
+│
+├─ Completed work
+│  ├─ Major feature/task? → Request code-reviewer subagent review
+│  └─ Before merge? → Request code-reviewer subagent review
+│
+└─ About to claim status
+   ├─ Have fresh verification? → State claim WITH evidence
+   └─ No fresh verification? → RUN verification command first
 ```
 
-## 注意事项
+## Receiving Feedback Protocol
 
-1. 审查要全面，不能遗漏关键问题
-2. 重点关注可能导致生产环境问题的bug
-3. 对于不确定的问题，要明确指出需要进一步确认
-4. 提供具体的修复建议，不要只指出问题
-5. 结合项目实际情况和业务逻辑进行审查
+### Response Pattern
+READ → UNDERSTAND → VERIFY → EVALUATE → RESPOND → IMPLEMENT
+
+### Key Rules
+- ❌ No performative agreement: "You're absolutely right!", "Great point!", "Thanks for [anything]"
+- ❌ No implementation before verification
+- ✅ Restate requirement, ask questions, push back with technical reasoning, or just start working
+- ✅ If unclear: STOP and ask for clarification on ALL unclear items first
+- ✅ YAGNI check: grep for usage before implementing suggested "proper" features
+
+### Source Handling
+- **Human partner:** Trusted - implement after understanding, no performative agreement
+- **External reviewers:** Verify technically correct, check for breakage, push back if wrong
+
+**Full protocol:** `references/code-review-reception.md`
+
+## Requesting Review Protocol
+
+### When to Request
+- After each task in subagent-driven development
+- After major feature completion
+- Before merge to main
+
+### Process
+1. Get git SHAs: `BASE_SHA=$(git rev-parse HEAD~1)` and `HEAD_SHA=$(git rev-parse HEAD)`
+2. Dispatch code-reviewer subagent via Task tool with: WHAT_WAS_IMPLEMENTED, PLAN_OR_REQUIREMENTS, BASE_SHA, HEAD_SHA, DESCRIPTION
+3. Act on feedback: Fix Critical immediately, Important before proceeding, note Minor for later
+
+**Full protocol:** `references/requesting-code-review.md`
+
+## Verification Gates Protocol
+
+### The Iron Law
+**NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE**
+
+### Gate Function
+IDENTIFY command → RUN full command → READ output → VERIFY confirms claim → THEN claim
+
+Skip any step = lying, not verifying
+
+### Requirements
+- Tests pass: Test output shows 0 failures
+- Build succeeds: Build command exit 0
+- Bug fixed: Test original symptom passes
+- Requirements met: Line-by-line checklist verified
+
+### Red Flags - STOP
+Using "should"/"probably"/"seems to", expressing satisfaction before verification, committing without verification, trusting agent reports, ANY wording implying success without running verification
+
+**Full protocol:** `references/verification-before-completion.md`
+
+## Integration with Workflows
+
+- **Subagent-Driven:** Review after EACH task, verify before moving to next
+- **Pull Requests:** Verify tests pass, request code-reviewer review before merge
+- **General:** Apply verification gates before any status claims, push back on invalid feedback
+
+## Bottom Line
+
+1. Technical rigor over social performance - No performative agreement
+2. Systematic review processes - Use code-reviewer subagent
+3. Evidence before claims - Verification gates always
+
+Verify. Question. Then implement. Evidence. Then claim.
