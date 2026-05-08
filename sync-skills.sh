@@ -4,16 +4,17 @@ shopt -s nullglob
 
 # ============================================
 # Skill 同步脚本
-# 将 src/ 目录下的 skills 同步到 Cursor / Codex 的 skills 目录
+# 将 src/ 目录下的 skills 同步到 Cursor / Codex / Qoder 的 skills 目录
 # ============================================
 
 # ----------------------------
-# 配置项（默认直接同步到 Cursor / Codex，也支持环境变量覆盖）
+# 配置项（默认直接同步到 Cursor / Codex / Qoder，也支持环境变量覆盖）
 # ----------------------------
 # 示例：
 #   ./sync-skills.sh
 #   SYNC_TO_CURSOR=0 ./sync-skills.sh
 #   SYNC_TO_CURSOR=0 SYNC_TO_CODEX=1 ./sync-skills.sh
+#   SYNC_TO_QODER=1 ./sync-skills.sh
 
 # 定义源目录（项目中的 skills 目录）
 SRC_DIR="$(cd "$(dirname "$0")" && pwd)/src"
@@ -21,14 +22,18 @@ SRC_DIR="$(cd "$(dirname "$0")" && pwd)/src"
 # 脚本内置默认配置
 DEFAULT_SYNC_TO_CURSOR=1
 DEFAULT_SYNC_TO_CODEX=1
+DEFAULT_SYNC_TO_QODER=1
 DEFAULT_CURSOR_TARGET_DIR="$HOME/.cursor/skills-cursor"
 DEFAULT_CODEX_TARGET_DIR="$HOME/.codex/skills"
+DEFAULT_QODER_TARGET_DIR="$HOME/.qoder/skills"
 
 # 运行时配置（可被环境变量覆盖）
 SYNC_TO_CURSOR="${SYNC_TO_CURSOR:-$DEFAULT_SYNC_TO_CURSOR}"
 SYNC_TO_CODEX="${SYNC_TO_CODEX:-$DEFAULT_SYNC_TO_CODEX}"
+SYNC_TO_QODER="${SYNC_TO_QODER:-$DEFAULT_SYNC_TO_QODER}"
 CURSOR_TARGET_DIR="${CURSOR_TARGET_DIR:-$DEFAULT_CURSOR_TARGET_DIR}"
 CODEX_TARGET_DIR="${CODEX_TARGET_DIR:-$DEFAULT_CODEX_TARGET_DIR}"
+QODER_TARGET_DIR="${QODER_TARGET_DIR:-$DEFAULT_QODER_TARGET_DIR}"
 
 is_enabled() {
     local value
@@ -80,8 +85,13 @@ if is_enabled "$SYNC_TO_CODEX"; then
     TARGET_DIRS+=("$CODEX_TARGET_DIR")
 fi
 
+if is_enabled "$SYNC_TO_QODER"; then
+    TARGET_LABELS+=("Qoder")
+    TARGET_DIRS+=("$QODER_TARGET_DIR")
+fi
+
 if [[ ${#TARGET_DIRS[@]} -eq 0 ]]; then
-    echo "[ERROR] 没有启用任何同步目标，请至少开启一个：SYNC_TO_CURSOR / SYNC_TO_CODEX"
+    echo "[ERROR] 没有启用任何同步目标，请至少开启一个：SYNC_TO_CURSOR / SYNC_TO_CODEX / SYNC_TO_QODER"
     exit 1
 fi
 
