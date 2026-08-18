@@ -8,11 +8,11 @@ shopt -s nullglob
 # ============================================
 
 # ----------------------------
-# 配置项（默认直接同步到 Cursor / Codex / Qoder，也支持环境变量覆盖）
+# 配置项（交互式选择同步目标，也支持环境变量覆盖）
 # ----------------------------
 # 示例：
-#   ./sync-skills.sh
-#   SYNC_TO_CURSOR=0 ./sync-skills.sh
+#   ./sync-skills.sh                              # 交互式选择同步目标
+#   SYNC_TO_CURSOR=0 ./sync-skills.sh             # 跳过交互，不同步到 Cursor
 #   SYNC_TO_CURSOR=0 SYNC_TO_CODEX=1 ./sync-skills.sh
 #   SYNC_TO_QODER=1 ./sync-skills.sh
 
@@ -28,9 +28,9 @@ DEFAULT_CODEX_TARGET_DIR="$HOME/.codex/skills"
 DEFAULT_QODER_TARGET_DIR="$HOME/.qoder/skills"
 
 # 运行时配置（可被环境变量覆盖）
-SYNC_TO_CURSOR="${SYNC_TO_CURSOR:-$DEFAULT_SYNC_TO_CURSOR}"
-SYNC_TO_CODEX="${SYNC_TO_CODEX:-$DEFAULT_SYNC_TO_CODEX}"
-SYNC_TO_QODER="${SYNC_TO_QODER:-$DEFAULT_SYNC_TO_QODER}"
+SYNC_TO_CURSOR="${SYNC_TO_CURSOR:-}"
+SYNC_TO_CODEX="${SYNC_TO_CODEX:-}"
+SYNC_TO_QODER="${SYNC_TO_QODER:-}"
 CURSOR_TARGET_DIR="${CURSOR_TARGET_DIR:-$DEFAULT_CURSOR_TARGET_DIR}"
 CODEX_TARGET_DIR="${CODEX_TARGET_DIR:-$DEFAULT_CODEX_TARGET_DIR}"
 QODER_TARGET_DIR="${QODER_TARGET_DIR:-$DEFAULT_QODER_TARGET_DIR}"
@@ -53,6 +53,68 @@ is_enabled() {
             ;;
     esac
 }
+
+interactive_select_targets() {
+    local -a names=("Cursor" "Codex" "Qoder")
+    local -a dirs=("$CURSOR_TARGET_DIR" "$CODEX_TARGET_DIR" "$QODER_TARGET_DIR")
+    local -a selected=("$DEFAULT_SYNC_TO_CURSOR" "$DEFAULT_SYNC_TO_CODEX" "$DEFAULT_SYNC_TO_QODER")
+    local count=${#names[@]}
+
+    while true; do
+        clear 2>/dev/null || printf '\033[2J\033[H'
+        echo "========================================="
+        echo "  选择同步目标（按数字切换，回车确认）"
+        echo "========================================="
+        echo ""
+        for i in $(seq 0 $((count - 1))); do
+            local mark
+            if is_enabled "${selected[$i]}"; then
+                mark="✓"
+            else
+                mark=" "
+            fi
+            printf "  [%s] %d. %-8s -> %s\n" "$mark" $((i + 1)) "${names[$i]}" "${dirs[$i]}"
+        done
+        echo ""
+        echo "  输入数字切换 / 回车确认 / q 退出"
+        echo ""
+        printf "请选择: "
+
+        read -r -n 1 key
+        echo ""
+
+        case "$key" in
+            [1-$count])
+                local idx=$((key - 1))
+                if is_enabled "${selected[$idx]}"; then
+                    selected[$idx]=0
+                else
+                    selected[$idx]=1
+                fi
+                ;;
+            q|Q)
+                echo "[INFO] 已取消同步"
+                exit 0
+                ;;
+            "")
+                SYNC_TO_CURSOR="${selected[0]}"
+                SYNC_TO_CODEX="${selected[1]}"
+                SYNC_TO_QODER="${selected[2]}"
+                return
+                ;;
+        esac
+    done
+}
+
+# 如果用户没有通过环境变量显式指定，且终端支持交互，则弹出选择菜单
+if [[ -z "$SYNC_TO_CURSOR" && -z "$SYNC_TO_CODEX" && -z "$SYNC_TO_QODER" ]] && [[ -t 0 ]]; then
+    interactive_select_targets
+fi
+
+# 回退到默认值
+SYNC_TO_CURSOR="${SYNC_TO_CURSOR:-$DEFAULT_SYNC_TO_CURSOR}"
+SYNC_TO_CODEX="${SYNC_TO_CODEX:-$DEFAULT_SYNC_TO_CODEX}"
+SYNC_TO_QODER="${SYNC_TO_QODER:-$DEFAULT_SYNC_TO_QODER}"
 
 sync_skill_to_target() {
     local skill_name="$1"
