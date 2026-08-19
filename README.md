@@ -1,6 +1,6 @@
 # skills
 
-通用 skills 集合，统一管理并可同步到 Cursor / Codex / Qoder。
+通用 skills 集合，统一管理并可同步到 Cursor / Codex / Qoder / Kiro。
 
 ## 目录结构
 
@@ -21,11 +21,12 @@
 ./sync-skills.sh
 ```
 
-运行后会弹出菜单，按数字切换同步目标，回车确认。默认同步到以下三个目录：
+运行后会弹出菜单，按数字切换同步目标，回车确认。默认同步到以下四个目录：
 
 - `~/.cursor/skills/`
 - `~/.codex/skills`
 - `~/.qoder/skills`
+- `~/.kiro/skills/`
 
 如果目标中已有同名 skill，项目中的版本会覆盖目标目录中的版本。
 
@@ -33,16 +34,22 @@
 
 ```bash
 # 仅同步到 Cursor
-SYNC_TO_CODEX=0 SYNC_TO_QODER=0 ./sync-skills.sh
+SYNC_TO_CODEX=0 SYNC_TO_QODER=0 SYNC_TO_KIRO=0 ./sync-skills.sh
 
 # 仅同步到 Codex
-SYNC_TO_CURSOR=0 SYNC_TO_QODER=0 ./sync-skills.sh
+SYNC_TO_CURSOR=0 SYNC_TO_QODER=0 SYNC_TO_KIRO=0 ./sync-skills.sh
 
 # 仅同步到 Qoder
-SYNC_TO_CURSOR=0 SYNC_TO_CODEX=0 ./sync-skills.sh
+SYNC_TO_CURSOR=0 SYNC_TO_CODEX=0 SYNC_TO_KIRO=0 ./sync-skills.sh
 
-# 自定义目标目录
-CURSOR_TARGET_DIR="$HOME/.cursor/custom" ./sync-skills.sh
+# 仅同步到 Kiro
+SYNC_TO_CURSOR=0 SYNC_TO_CODEX=0 SYNC_TO_QODER=0 ./sync-skills.sh
+
+# 自定义 Kiro 目标目录
+KIRO_TARGET_DIR="$HOME/.kiro/custom" ./sync-skills.sh
+
+# 禁用彩色输出（重定向或管道输出时也会自动禁用）
+NO_COLOR=1 ./sync-skills.sh
 ```
 
 ### 添加新的 skill
