@@ -4,7 +4,7 @@ shopt -s nullglob
 
 # ============================================
 # Skill 同步脚本
-# 将 src/ 目录下的 skills 同步到 Cursor / Codex / Qoder / Kiro 的 skills 目录
+# 将 src/ 目录下的 skills 同步到 Cursor / Codex / Qoder / Qoder-CN / Kiro 的 skills 目录
 # ============================================
 
 # ----------------------------
@@ -24,20 +24,24 @@ SRC_DIR="$(cd "$(dirname "$0")" && pwd)/src"
 DEFAULT_SYNC_TO_CURSOR=1
 DEFAULT_SYNC_TO_CODEX=1
 DEFAULT_SYNC_TO_QODER=1
+DEFAULT_SYNC_TO_QODER_CN=1
 DEFAULT_SYNC_TO_KIRO=1
 DEFAULT_CURSOR_TARGET_DIR="$HOME/.cursor/skills"
 DEFAULT_CODEX_TARGET_DIR="$HOME/.codex/skills"
 DEFAULT_QODER_TARGET_DIR="$HOME/.qoder/skills"
+DEFAULT_QODER_CN_TARGET_DIR="$HOME/.qoder-cn/skills"
 DEFAULT_KIRO_TARGET_DIR="$HOME/.kiro/skills"
 
 # 运行时配置（可被环境变量覆盖）
 SYNC_TO_CURSOR="${SYNC_TO_CURSOR:-}"
 SYNC_TO_CODEX="${SYNC_TO_CODEX:-}"
 SYNC_TO_QODER="${SYNC_TO_QODER:-}"
+SYNC_TO_QODER_CN="${SYNC_TO_QODER_CN:-}"
 SYNC_TO_KIRO="${SYNC_TO_KIRO:-}"
 CURSOR_TARGET_DIR="${CURSOR_TARGET_DIR:-$DEFAULT_CURSOR_TARGET_DIR}"
 CODEX_TARGET_DIR="${CODEX_TARGET_DIR:-$DEFAULT_CODEX_TARGET_DIR}"
 QODER_TARGET_DIR="${QODER_TARGET_DIR:-$DEFAULT_QODER_TARGET_DIR}"
+QODER_CN_TARGET_DIR="${QODER_CN_TARGET_DIR:-$DEFAULT_QODER_CN_TARGET_DIR}"
 KIRO_TARGET_DIR="${KIRO_TARGET_DIR:-$DEFAULT_KIRO_TARGET_DIR}"
 
 # 仅在终端输出且未设置 NO_COLOR 时启用颜色。
@@ -103,9 +107,9 @@ is_enabled() {
 }
 
 interactive_select_targets() {
-    local -a names=("Cursor" "Codex" "Qoder" "Kiro")
-    local -a dirs=("$CURSOR_TARGET_DIR" "$CODEX_TARGET_DIR" "$QODER_TARGET_DIR" "$KIRO_TARGET_DIR")
-    local -a selected=("$DEFAULT_SYNC_TO_CURSOR" "$DEFAULT_SYNC_TO_CODEX" "$DEFAULT_SYNC_TO_QODER" "$DEFAULT_SYNC_TO_KIRO")
+    local -a names=("Cursor" "Codex" "Qoder" "Qoder-CN" "Kiro")
+    local -a dirs=("$CURSOR_TARGET_DIR" "$CODEX_TARGET_DIR" "$QODER_TARGET_DIR" "$QODER_CN_TARGET_DIR" "$KIRO_TARGET_DIR")
+    local -a selected=("$DEFAULT_SYNC_TO_CURSOR" "$DEFAULT_SYNC_TO_CODEX" "$DEFAULT_SYNC_TO_QODER" "$DEFAULT_SYNC_TO_QODER_CN" "$DEFAULT_SYNC_TO_KIRO")
     local count=${#names[@]}
     local i
 
@@ -148,7 +152,8 @@ interactive_select_targets() {
                 SYNC_TO_CURSOR="${selected[0]}"
                 SYNC_TO_CODEX="${selected[1]}"
                 SYNC_TO_QODER="${selected[2]}"
-                SYNC_TO_KIRO="${selected[3]}"
+                SYNC_TO_QODER_CN="${selected[3]}"
+                SYNC_TO_KIRO="${selected[4]}"
                 return
                 ;;
         esac
@@ -156,7 +161,7 @@ interactive_select_targets() {
 }
 
 # 如果用户没有通过环境变量显式指定，且终端支持交互，则弹出选择菜单
-if [[ -z "$SYNC_TO_CURSOR" && -z "$SYNC_TO_CODEX" && -z "$SYNC_TO_QODER" && -z "$SYNC_TO_KIRO" ]] && [[ -t 0 ]]; then
+if [[ -z "$SYNC_TO_CURSOR" && -z "$SYNC_TO_CODEX" && -z "$SYNC_TO_QODER" && -z "$SYNC_TO_QODER_CN" && -z "$SYNC_TO_KIRO" ]] && [[ -t 0 ]]; then
     interactive_select_targets
 fi
 
@@ -164,6 +169,7 @@ fi
 SYNC_TO_CURSOR="${SYNC_TO_CURSOR:-$DEFAULT_SYNC_TO_CURSOR}"
 SYNC_TO_CODEX="${SYNC_TO_CODEX:-$DEFAULT_SYNC_TO_CODEX}"
 SYNC_TO_QODER="${SYNC_TO_QODER:-$DEFAULT_SYNC_TO_QODER}"
+SYNC_TO_QODER_CN="${SYNC_TO_QODER_CN:-$DEFAULT_SYNC_TO_QODER_CN}"
 SYNC_TO_KIRO="${SYNC_TO_KIRO:-$DEFAULT_SYNC_TO_KIRO}"
 
 TARGET_LABELS=()
@@ -184,13 +190,18 @@ if is_enabled "$SYNC_TO_QODER"; then
     TARGET_DIRS+=("$QODER_TARGET_DIR")
 fi
 
+if is_enabled "$SYNC_TO_QODER_CN"; then
+    TARGET_LABELS+=("Qoder-CN")
+    TARGET_DIRS+=("$QODER_CN_TARGET_DIR")
+fi
+
 if is_enabled "$SYNC_TO_KIRO"; then
     TARGET_LABELS+=("Kiro")
     TARGET_DIRS+=("$KIRO_TARGET_DIR")
 fi
 
 if [[ ${#TARGET_DIRS[@]} -eq 0 ]]; then
-    log_error "没有启用任何同步目标，请至少开启一个：SYNC_TO_CURSOR / SYNC_TO_CODEX / SYNC_TO_QODER / SYNC_TO_KIRO"
+    log_error "没有启用任何同步目标，请至少开启一个：SYNC_TO_CURSOR / SYNC_TO_CODEX / SYNC_TO_QODER / SYNC_TO_QODER_CN / SYNC_TO_KIRO"
     exit 1
 fi
 
