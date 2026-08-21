@@ -1,6 +1,6 @@
 ---
 name: atomic-commit
-description: Automatically split uncommitted workspace changes into multiple atomic commits by functionality, present a commit plan for user confirmation, then execute commits with Conventional Commit messages and push to remote. Use when the user wants to batch commit, split changes into logical commits, clean up a messy working tree, or asks for atomic/structured commits. Triggers on: atomic commit, split commits, batch commit, commit by feature, clean commits, /atomic-commit.
+description: Automatically split uncommitted workspace changes into multiple atomic commits by functionality and architectural layer (infrastructure/abstractions first, then business logic), present a commit plan for user confirmation, then execute commits with Conventional Commit messages and push to remote. Use when the user wants to batch commit, split changes into logical commits, clean up a messy working tree, or asks for atomic/structured commits. Triggers on: atomic commit, split commits, batch commit, commit by feature, clean commits, /atomic-commit.
 ---
 
 # Atomic Commit
@@ -19,13 +19,49 @@ description: Automatically split uncommitted workspace changes into multiple ato
 
 ### Phase 2: 分析与分组
 
-根据 diff 内容，将变更按功能/模块分组为原子 commit。分组原则：
+根据 diff 内容，将变更按功能/模块分组为原子 commit。
 
-- **同一功能**的所有文件归为一个 commit（如一个 API 的路由+控制器+测试）
-- **独立的重构**单独一个 commit
+#### 2.1 功能分组（第一层）
+
+先按大功能/模块做粗粒度分组：
+
+- **同一功能**的所有文件归为一个大组（如一个 API 的路由+控制器+测试）
+- **独立的重构**单独一个组
 - **配置变更**（如 package.json、tsconfig）单独或按用途合并
 - **删除/重命名**操作与相关功能合并
-- 每个 commit 应保持**可独立回滚**的粒度
+
+#### 2.2 分层拆分（第二层 — 关键步骤）
+
+对每个大功能组，进一步按**架构层次**拆分为多个 commit。从底层到上层依次提交，确保每个 commit 都能独立编译/运行：
+
+| 层次 | 包含内容 | 示例 |
+|------|---------|------|
+| **L1: 基础设施层** | 类型定义、接口、枚举、常量、配置文件 | `types/user.ts`, `constants/roles.ts` |
+| **L2: 抽象/工具层** | 工具函数、基类、抽象类、hooks、helpers | `utils/format.ts`, `hooks/useAuth.ts` |
+| **L3: 数据/服务层** | API 调用、数据库模型、服务层、store | `api/user.ts`, `models/user.ts` |
+| **L4: 业务逻辑层** | 核心业务逻辑、控制器、组件 | `controllers/user.ts`, `components/UserList.tsx` |
+| **L5: 集成/测试层** | 测试、文档、UI 集成、入口文件 | `tests/user.test.ts`, `pages/index.tsx` |
+
+**拆分规则：**
+
+- 一个功能如果只涉及 1-2 个层次且文件数 ≤3，无需再拆
+- 一个功能如果涉及 3+ 个层次或文件数 >3，**必须按层次拆分**
+- 每个层次的 commit 必须能**独立编译通过**（不依赖更上层的代码）
+- 同层次内如果有多块不相关的变更，可以继续拆分
+- 提交顺序严格从 L1 → L5，底层先提交
+
+#### 2.3 排序原则
+
+最终 commit 列表按以下顺序排列：
+
+1. **纯基础设施变更**（不归属任何功能的类型/工具/配置）
+2. **各功能的基础层**（L1-L2），按功能分组
+3. **各功能的数据/服务层**（L3）
+4. **各功能的业务逻辑层**（L4）
+5. **各功能的集成/测试层**（L5）
+6. **文档和杂项**
+
+每个 commit 应保持**可独立回滚**的粒度。
 
 ### Phase 3: 安全检查（每个 commit 组）
 
@@ -92,15 +128,20 @@ description: Automatically split uncommitted workspace changes into multiple ato
 ```markdown
 ## Commit 计划
 
-| # | 类型 | 范围(scope) | 描述 | 文件数 | 文件列表 |
-|---|------|------------|------|--------|---------|
-| 1 | feat | auth       | add JWT login support | 3 | src/auth/jwt.ts, src/auth/login.ts, tests/auth.test.ts |
-| 2 | fix  | api        | handle null response in user endpoint | 1 | src/api/user.ts |
-| 3 | refactor | utils  | extract date formatting to helper | 2 | src/utils/date.ts, src/components/Header.tsx |
-| 4 | docs | -          | update README with setup instructions | 1 | README.md |
+> 分层拆分：基础设施/抽象层优先，业务逻辑在后，每个 commit 可独立编译。
+
+| # | 层次 | 类型 | 范围(scope) | 描述 | 文件数 | 文件列表 |
+|---|------|------|------------|------|--------|---------|
+| 1 | L1 | feat | auth       | add auth type definitions and constants | 2 | src/auth/types.ts, src/auth/constants.ts |
+| 2 | L2 | feat | auth       | add JWT utility functions | 1 | src/auth/jwt.ts |
+| 3 | L3 | feat | auth       | add auth service and API integration | 2 | src/auth/service.ts, src/auth/api.ts |
+| 4 | L4 | feat | auth       | implement login controller and middleware | 2 | src/auth/login.ts, src/auth/middleware.ts |
+| 5 | L5 | test | auth       | add auth unit tests | 1 | tests/auth.test.ts |
+| 6 | -    | fix  | api        | handle null response in user endpoint | 1 | src/api/user.ts |
+| 7 | -    | docs | -          | update README with setup instructions | 1 | README.md |
 
 ### Breaking Changes
-- Commit #1: 认证接口从 session 迁移到 JWT，需要更新客户端请求头
+- Commit #1-#5: 认证接口从 session 迁移到 JWT，需要更新客户端请求头
 
 ### 安全警告
 - 已跳过 .env.local（包含敏感凭证）
