@@ -4,7 +4,7 @@ shopt -s nullglob
 
 # ============================================
 # Skill 同步脚本
-# 将 src/ 目录下的 skills 同步到 Cursor / Codex / Qoder / Qoder-CN / Kiro 的 skills 目录
+# 将 src/ 目录下的 skills 同步到 Cursor / Codex / Qoder / Qoder-CN / Kiro / DeepSeek Harness 的 skills 目录
 # ============================================
 
 # ----------------------------
@@ -15,6 +15,7 @@ shopt -s nullglob
 #   SYNC_TO_CURSOR=0 ./sync-skills.sh             # 跳过交互，不同步到 Cursor
 #   SYNC_TO_CURSOR=0 SYNC_TO_CODEX=1 ./sync-skills.sh
 #   SYNC_TO_KIRO=1 ./sync-skills.sh
+#   SYNC_TO_DSH=1 ./sync-skills.sh                # 同步到 DeepSeek Harness
 #   NO_COLOR=1 ./sync-skills.sh                   # 禁用彩色输出
 
 # 定义源目录（项目中的 skills 目录）
@@ -26,11 +27,14 @@ DEFAULT_SYNC_TO_CODEX=1
 DEFAULT_SYNC_TO_QODER=1
 DEFAULT_SYNC_TO_QODER_CN=1
 DEFAULT_SYNC_TO_KIRO=1
+DEFAULT_SYNC_TO_DSH=1
 DEFAULT_CURSOR_TARGET_DIR="$HOME/.cursor/skills"
 DEFAULT_CODEX_TARGET_DIR="$HOME/.codex/skills"
 DEFAULT_QODER_TARGET_DIR="$HOME/.qoder/skills"
 DEFAULT_QODER_CN_TARGET_DIR="$HOME/.qoder-cn/skills"
 DEFAULT_KIRO_TARGET_DIR="$HOME/.kiro/skills"
+# DeepSeek Harness 默认从 $DSH_HOME/skills（$DSH_HOME 缺省为 ~/.dsh）发现 skills
+DEFAULT_DSH_TARGET_DIR="${DSH_HOME:-$HOME/.dsh}/skills"
 
 # 运行时配置（可被环境变量覆盖）
 SYNC_TO_CURSOR="${SYNC_TO_CURSOR:-}"
@@ -38,11 +42,13 @@ SYNC_TO_CODEX="${SYNC_TO_CODEX:-}"
 SYNC_TO_QODER="${SYNC_TO_QODER:-}"
 SYNC_TO_QODER_CN="${SYNC_TO_QODER_CN:-}"
 SYNC_TO_KIRO="${SYNC_TO_KIRO:-}"
+SYNC_TO_DSH="${SYNC_TO_DSH:-}"
 CURSOR_TARGET_DIR="${CURSOR_TARGET_DIR:-$DEFAULT_CURSOR_TARGET_DIR}"
 CODEX_TARGET_DIR="${CODEX_TARGET_DIR:-$DEFAULT_CODEX_TARGET_DIR}"
 QODER_TARGET_DIR="${QODER_TARGET_DIR:-$DEFAULT_QODER_TARGET_DIR}"
 QODER_CN_TARGET_DIR="${QODER_CN_TARGET_DIR:-$DEFAULT_QODER_CN_TARGET_DIR}"
 KIRO_TARGET_DIR="${KIRO_TARGET_DIR:-$DEFAULT_KIRO_TARGET_DIR}"
+DSH_TARGET_DIR="${DSH_TARGET_DIR:-$DEFAULT_DSH_TARGET_DIR}"
 
 # 仅在终端输出且未设置 NO_COLOR 时启用颜色。
 if [[ -t 1 && -z "${NO_COLOR+x}" && "${TERM:-dumb}" != "dumb" ]]; then
@@ -107,9 +113,9 @@ is_enabled() {
 }
 
 interactive_select_targets() {
-    local -a names=("Cursor" "Codex" "Qoder" "Qoder-CN" "Kiro")
-    local -a dirs=("$CURSOR_TARGET_DIR" "$CODEX_TARGET_DIR" "$QODER_TARGET_DIR" "$QODER_CN_TARGET_DIR" "$KIRO_TARGET_DIR")
-    local -a selected=("$DEFAULT_SYNC_TO_CURSOR" "$DEFAULT_SYNC_TO_CODEX" "$DEFAULT_SYNC_TO_QODER" "$DEFAULT_SYNC_TO_QODER_CN" "$DEFAULT_SYNC_TO_KIRO")
+    local -a names=("Cursor" "Codex" "Qoder" "Qoder-CN" "Kiro" "DSH")
+    local -a dirs=("$CURSOR_TARGET_DIR" "$CODEX_TARGET_DIR" "$QODER_TARGET_DIR" "$QODER_CN_TARGET_DIR" "$KIRO_TARGET_DIR" "$DSH_TARGET_DIR")
+    local -a selected=("$DEFAULT_SYNC_TO_CURSOR" "$DEFAULT_SYNC_TO_CODEX" "$DEFAULT_SYNC_TO_QODER" "$DEFAULT_SYNC_TO_QODER_CN" "$DEFAULT_SYNC_TO_KIRO" "$DEFAULT_SYNC_TO_DSH")
     local count=${#names[@]}
     local i
 
@@ -154,6 +160,7 @@ interactive_select_targets() {
                 SYNC_TO_QODER="${selected[2]}"
                 SYNC_TO_QODER_CN="${selected[3]}"
                 SYNC_TO_KIRO="${selected[4]}"
+                SYNC_TO_DSH="${selected[5]}"
                 return
                 ;;
         esac
@@ -161,7 +168,7 @@ interactive_select_targets() {
 }
 
 # 如果用户没有通过环境变量显式指定，且终端支持交互，则弹出选择菜单
-if [[ -z "$SYNC_TO_CURSOR" && -z "$SYNC_TO_CODEX" && -z "$SYNC_TO_QODER" && -z "$SYNC_TO_QODER_CN" && -z "$SYNC_TO_KIRO" ]] && [[ -t 0 ]]; then
+if [[ -z "$SYNC_TO_CURSOR" && -z "$SYNC_TO_CODEX" && -z "$SYNC_TO_QODER" && -z "$SYNC_TO_QODER_CN" && -z "$SYNC_TO_KIRO" && -z "$SYNC_TO_DSH" ]] && [[ -t 0 ]]; then
     interactive_select_targets
 fi
 
@@ -171,6 +178,7 @@ SYNC_TO_CODEX="${SYNC_TO_CODEX:-$DEFAULT_SYNC_TO_CODEX}"
 SYNC_TO_QODER="${SYNC_TO_QODER:-$DEFAULT_SYNC_TO_QODER}"
 SYNC_TO_QODER_CN="${SYNC_TO_QODER_CN:-$DEFAULT_SYNC_TO_QODER_CN}"
 SYNC_TO_KIRO="${SYNC_TO_KIRO:-$DEFAULT_SYNC_TO_KIRO}"
+SYNC_TO_DSH="${SYNC_TO_DSH:-$DEFAULT_SYNC_TO_DSH}"
 
 TARGET_LABELS=()
 TARGET_DIRS=()
@@ -200,8 +208,13 @@ if is_enabled "$SYNC_TO_KIRO"; then
     TARGET_DIRS+=("$KIRO_TARGET_DIR")
 fi
 
+if is_enabled "$SYNC_TO_DSH"; then
+    TARGET_LABELS+=("DSH")
+    TARGET_DIRS+=("$DSH_TARGET_DIR")
+fi
+
 if [[ ${#TARGET_DIRS[@]} -eq 0 ]]; then
-    log_error "没有启用任何同步目标，请至少开启一个：SYNC_TO_CURSOR / SYNC_TO_CODEX / SYNC_TO_QODER / SYNC_TO_QODER_CN / SYNC_TO_KIRO"
+    log_error "没有启用任何同步目标，请至少开启一个：SYNC_TO_CURSOR / SYNC_TO_CODEX / SYNC_TO_QODER / SYNC_TO_QODER_CN / SYNC_TO_KIRO / SYNC_TO_DSH"
     exit 1
 fi
 
