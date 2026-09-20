@@ -1,3 +1,8 @@
+---
+name: ui-ux-pro-max
+description: Comprehensive design guide for web and mobile applications, with 67 styles, 96 color palettes, 57 font pairings, 99 UX guidelines, and 25 chart types across 13 technology stacks backed by a searchable, priority-ranked database. Use when designing or building UI/UX, choosing colors, typography, or styles, picking a technology stack, or when the user asks for design guidance, design systems, landing pages, dashboards, or wants to make an interface look better.
+---
+
 # ui-ux-pro-max
 
 Comprehensive design guide for web and mobile applications. Contains 67 styles, 96 color palettes, 57 font pairings, 99 UX guidelines, and 25 chart types across 13 technology stacks. Searchable database with priority-based recommendations.
