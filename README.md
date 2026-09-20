@@ -1,6 +1,6 @@
 # skills
 
-通用 skills 集合，统一管理并可同步到 Cursor / Codex / Qoder / Kiro。
+通用 skills 集合，统一管理并可同步到 Cursor / Codex / Qoder / Qoder-CN / Kiro / DeepSeek Harness。
 
 ## 目录结构
 
@@ -21,32 +21,40 @@
 ./sync-skills.sh
 ```
 
-运行后会弹出菜单，按数字切换同步目标，回车确认。默认同步到以下四个目录：
+运行后会弹出菜单，按数字切换同步目标，回车确认。默认同步到以下目录：
 
 - `~/.cursor/skills/`
 - `~/.codex/skills`
 - `~/.qoder/skills`
+- `~/.qoder-cn/skills`
 - `~/.kiro/skills/`
+- `$DSH_HOME/skills`（DeepSeek Harness，`DSH_HOME` 缺省为 `~/.dsh`，即 `~/.dsh/skills`）
 
 如果目标中已有同名 skill，项目中的版本会覆盖目标目录中的版本。
+
+### 关于 DeepSeek Harness
+
+DSH 的本地 skill 提供方（`@deepseek-ai/dsh-skill-filesystem`）会扫描 `<dshHome>/skills`，即默认的 `~/.dsh/skills`。因此：
+
+- 同步到该目录后，重启会话（或新建会话）即可在 skill 目录中看到这些 skills；DSH 会监听目录变化，通常无需重启进程。
+- 每个 skill 必须是 `<name>/SKILL.md` 目录包，且 `SKILL.md` 的 YAML frontmatter 必须包含 **`name` 和 `description`** 两个字段，`name` 必须为 kebab-case（`^[a-z0-9]+(-[a-z0-9]+)*$`）。缺少 frontmatter 或字段的 skill 会被 DSH 静默忽略（仅记录 warning），不会出现在目录里。
+- 如果设置了 `DSH_HOME` 环境变量，脚本会自动把目标定位到 `$DSH_HOME/skills`；也可以显式覆盖：
+
+```bash
+DSH_TARGET_DIR="$HOME/custom/dsh-skills" ./sync-skills.sh
+```
 
 ### 常用配置
 
 ```bash
-# 仅同步到 Cursor
-SYNC_TO_CODEX=0 SYNC_TO_QODER=0 SYNC_TO_KIRO=0 ./sync-skills.sh
+# 非交互式同步到全部目标
+SYNC_TO_CURSOR=1 SYNC_TO_CODEX=1 SYNC_TO_QODER=1 SYNC_TO_QODER_CN=1 SYNC_TO_KIRO=1 SYNC_TO_DSH=1 ./sync-skills.sh
 
-# 仅同步到 Codex
-SYNC_TO_CURSOR=0 SYNC_TO_QODER=0 SYNC_TO_KIRO=0 ./sync-skills.sh
+# 仅同步到 DeepSeek Harness
+SYNC_TO_CURSOR=0 SYNC_TO_CODEX=0 SYNC_TO_QODER=0 SYNC_TO_QODER_CN=0 SYNC_TO_KIRO=0 SYNC_TO_DSH=1 ./sync-skills.sh
 
-# 仅同步到 Qoder
-SYNC_TO_CURSOR=0 SYNC_TO_CODEX=0 SYNC_TO_KIRO=0 ./sync-skills.sh
-
-# 仅同步到 Kiro
-SYNC_TO_CURSOR=0 SYNC_TO_CODEX=0 SYNC_TO_QODER=0 ./sync-skills.sh
-
-# 自定义 Kiro 目标目录
-KIRO_TARGET_DIR="$HOME/.kiro/custom" ./sync-skills.sh
+# 自定义 DSH 目标目录
+DSH_TARGET_DIR="$HOME/.dsh/custom-skills" ./sync-skills.sh
 
 # 禁用彩色输出（重定向或管道输出时也会自动禁用）
 NO_COLOR=1 ./sync-skills.sh
