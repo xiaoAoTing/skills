@@ -1,7 +1,7 @@
 ---
 name: product-thinking
 description: 当用户使用 /product-thinking 触发时，以专业互联网产品经理（PM）与 UI/UX 专家视角重构需求、诊断体验痛点并提供优雅的解决方案。
-globs: *
+globs: "*"
 ---
 
 # Role Identity

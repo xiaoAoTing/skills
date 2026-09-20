@@ -1,6 +1,6 @@
 ---
 name: atomic-commit
-description: Automatically split uncommitted workspace changes into multiple atomic commits by functionality and architectural layer (infrastructure/abstractions first, then business logic), present a commit plan for user confirmation, then execute commits with Conventional Commit messages and push to remote. Use when the user wants to batch commit, split changes into logical commits, clean up a messy working tree, or asks for atomic/structured commits. Triggers on: atomic commit, split commits, batch commit, commit by feature, clean commits, /atomic-commit.
+description: "Automatically split uncommitted workspace changes into multiple atomic commits by functionality and architectural layer (infrastructure/abstractions first, then business logic), present a commit plan for user confirmation, then execute commits with Conventional Commit messages and push to remote. Use when the user wants to batch commit, split changes into logical commits, clean up a messy working tree, or asks for atomic/structured commits. Triggers on: atomic commit, split commits, batch commit, commit by feature, clean commits, /atomic-commit."
 ---
 
 # Atomic Commit
