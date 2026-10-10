@@ -184,7 +184,31 @@ git commit -m "<type>(<scope>): <description>"
 
 ### Phase 6: 推送远程
 
-所有 commit 完成后：
+所有 commit 完成后，先检查远程是否有新提交：
+
+```bash
+# 1. 获取远程更新
+git fetch origin
+
+# 2. 检查本地与远程的差异
+git rev-list --count HEAD..@{u} 2>/dev/null
+# 返回 0 表示远程无新提交，可直接 push
+# 返回 >0 表示远程有新提交，需要先 pull
+```
+
+**若远程有新提交（需要 pull）：**
+
+```bash
+# 使用 rebase 方式拉取，保持提交历史线性
+git pull --rebase origin <branch>
+```
+
+若 rebase 产生冲突：
+1. 告知用户冲突文件列表
+2. **暂停等待用户处理**（不自动解决冲突）
+3. 用户处理完后，继续执行 `git rebase --continue` 和后续 push
+
+**若远程无新提交或 pull 完成后：**
 
 ```bash
 # 普通推送，禁止 force
