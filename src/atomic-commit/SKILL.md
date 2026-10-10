@@ -1,11 +1,11 @@
 ---
 name: atomic-commit
-description: "Automatically split uncommitted workspace changes into multiple atomic commits by functionality and architectural layer (infrastructure/abstractions first, then business logic), present a commit plan for user confirmation, then execute commits with Conventional Commit messages and push to remote. Use when the user wants to batch commit, split changes into logical commits, clean up a messy working tree, or asks for atomic/structured commits. Triggers on: atomic commit, split commits, batch commit, commit by feature, clean commits, /atomic-commit."
+description: "Automatically split uncommitted workspace changes into multiple atomic commits by functionality and architectural layer (infrastructure/abstractions first, then business logic), present a commit plan, then execute commits with Conventional Commit messages and push to remote. By default, executes commits immediately after planning without waiting for confirmation, unless there are security warnings, breaking changes, large-scale changes (30+ files), or the user explicitly requests confirmation. Use when the user wants to batch commit, split changes into logical commits, clean up a messy working tree, or asks for atomic/structured commits. Triggers on: atomic commit, split commits, batch commit, commit by feature, clean commits, /atomic-commit."
 ---
 
 # Atomic Commit
 
-将工作区大量未提交的变更按功能拆分为多个原子 commit，梳理计划供用户确认后自动执行 commit + push。
+将工作区大量未提交的变更按功能拆分为多个原子 commit，梳理计划后默认直接执行 commit + push（特殊情况暂停确认）。
 
 ## 工作流程
 
@@ -147,15 +147,30 @@ description: "Automatically split uncommitted workspace changes into multiple at
 - 已跳过 .env.local（包含敏感凭证）
 ```
 
-**等待用户确认后才执行。** 用户可以：
+### Phase 4.1: 判断是否需要暂停确认
+
+展示计划后，根据以下规则决定是否直接执行还是暂停等待确认：
+
+**直接执行（默认行为）：**
+- 无安全警告
+- 用户未在本次对话中明确要求逐步确认
+
+**暂停等待确认（特殊情况）：**
+- 存在安全警告（检测到敏感文件、加密异常等）
+- 用户在本次对话中明确要求"让我看看"、"先确认"、"别直接提交"等类似指令
+- 变更文件数量超过 30 个（大规模变更，给用户一个审视的机会）
+
+暂停时告知用户计划内容，等待用户确认后再执行。用户可以：
 - 确认全部
 - 要求调整分组
 - 跳过某些 commit
 - 修改 commit message
 
+**无需暂停时，展示计划后立即进入 Phase 5 执行提交。**
+
 ### Phase 5: 执行提交
 
-用户确认后，按以下顺序执行每个 commit：
+按以下顺序执行每个 commit（若 Phase 4.1 判定需要暂停，则在用户确认后执行）：
 
 ```bash
 # 1. 暂存该组文件（逐个指定，不用 git add -A / git add .）
@@ -179,6 +194,31 @@ git push
 若当前分支无上游分支，使用 `git push -u <remote> <branch>`。
 
 推送前**确认目标分支不是 main/master 的 force push**。
+
+### Phase 7: 完成总结
+
+所有 commit 和 push 完成后，输出最终总结：
+
+```markdown
+## 提交完成
+
+已推送 N 个 commit 到 origin/<branch>
+
+| # | Commit | 文件数 |
+|---|--------|--------|
+| 1 | feat(auth): add auth type definitions | 2 |
+| 2 | feat(auth): add JWT utility functions | 1 |
+| ... | ... | ... |
+
+### Breaking Changes
+- Commit #3: 认证接口从 session 迁移到 JWT，需要更新客户端请求头
+- Commit #5: API 响应格式变更，移除 data 包装层
+
+### 安全提示
+- 已跳过 .env.local（包含敏感凭证）
+```
+
+Breaking Changes 和安全提示仅在存在时显示。若无任何特殊情况，只输出提交完成表格即可。
 
 ## Conventional Commits 规范
 
